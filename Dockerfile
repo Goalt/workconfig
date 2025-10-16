@@ -40,8 +40,9 @@ RUN ARCH=$(uname -m) && \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
-    dpkg -x session-manager-plugin.deb / && \
-    rm -rf session-manager-plugin.deb
+    dpkg -x session-manager-plugin.deb /tmp/ssm && \
+    cp /tmp/ssm/usr/local/sessionmanagerplugin/bin/session-manager-plugin /usr/local/bin/ && \
+    rm -rf /tmp/ssm session-manager-plugin.deb
 
 # Set the working directory
 WORKDIR /app
