@@ -13,6 +13,7 @@ RUN apt-get update && \
     git \
     htop \
     net-tools \
+    ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -31,9 +32,12 @@ RUN apt update
 RUN apt install openvpn3 -y
 
 # Install golang
-# RUN wget https://go.dev/dl/go1.25.3.linux-arm64.tar.gz
-# RUN tar -C /usr/local -xzf go1.25.3.linux-arm64.tar.gz
-# ENV PATH="/usr/local/go/bin:${PATH}"
+RUN ARCH=$(dpkg --print-architecture) && \
+    GO_VERSION=1.25.3 && \
+    wget https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.linux-${ARCH}.tar.gz && \
+    rm go${GO_VERSION}.linux-${ARCH}.tar.gz
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Install Docker (Todo)
 # RUN apt-get update && \
