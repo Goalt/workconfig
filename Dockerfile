@@ -31,6 +31,19 @@ RUN ARCH=$(uname -m) && \
     ./aws/install && \
     rm -rf awscliv2.zip aws
 
+# Install AWS Session Manager plugin
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_arm64/session-manager-plugin.deb" -o "session-manager-plugin.deb"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    dpkg -x session-manager-plugin.deb /tmp/ssm && \
+    cp /tmp/ssm/usr/local/sessionmanagerplugin/bin/session-manager-plugin /usr/local/bin/ && \
+    rm -rf /tmp/ssm session-manager-plugin.deb
+
 # Set the working directory
 WORKDIR /app
 
