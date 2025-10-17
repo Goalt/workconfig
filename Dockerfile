@@ -66,6 +66,19 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm go${GO_VERSION}.linux-${ARCH}.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
+# Install go-swagger
+RUN ARCH=$(uname -m) && \
+    SWAGGER_VERSION=v0.31.0 && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        SWAGGER_ARCH="amd64"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        SWAGGER_ARCH="arm64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    wget -O /usr/local/bin/swagger "https://github.com/go-swagger/go-swagger/releases/download/${SWAGGER_VERSION}/swagger_linux_${SWAGGER_ARCH}" && \
+    chmod +x /usr/local/bin/swagger
+
 # Install Docker (Todo)
 # RUN apt-get update && \
 #     apt-get install -y \
