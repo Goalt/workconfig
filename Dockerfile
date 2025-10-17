@@ -79,6 +79,20 @@ RUN ARCH=$(uname -m) && \
     wget -O /usr/local/bin/swagger "https://github.com/go-swagger/go-swagger/releases/download/${SWAGGER_VERSION}/swagger_linux_${SWAGGER_ARCH}" && \
     chmod +x /usr/local/bin/swagger
 
+# Install VSCode CLI
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        VSCODE_ARCH="x64"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        VSCODE_ARCH="arm64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    curl -Lk "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-${VSCODE_ARCH}" --output vscode_cli.tar.gz && \
+    tar -xf vscode_cli.tar.gz -C /usr/local/bin && \
+    rm vscode_cli.tar.gz && \
+    chmod +x /usr/local/bin/code
+
 # Install Docker (Todo)
 # RUN apt-get update && \
 #     apt-get install -y \
