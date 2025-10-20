@@ -4,12 +4,11 @@ FROM debian:bookworm
 # Set environment variables to prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Create entrypoint script to configure DNS resolver at runtime
-RUN echo '#!/bin/bash\n\
-# Configure DNS resolver\n\
-echo "nameserver 8.8.8.8" > /etc/resolv.conf\n\
-# Execute the original command\n\
-exec "$@"' > /entrypoint.sh && chmod +x /entrypoint.sh
+# Copy custom DNS resolver configuration
+COPY resolv.conf /etc/resolv.conf.custom
+
+# Configure DNS resolver during build
+RUN cat /etc/resolv.conf.custom
 
 # Update package list and install basic utilities
 RUN apt-get update && \
@@ -119,8 +118,5 @@ RUN ARCH=$(uname -m) && \
 # Run after login
 # RUN /etc/init.d/dbus start
 
-# Set entrypoint to configure resolv.conf at runtime
-ENTRYPOINT ["/entrypoint.sh"]
-
-# Default command
-CMD ["sleep", "infinity"]
+# Default command - apply custom resolv.conf and then sleep
+CMD sh -c "cat /etc/resolv.conf.custom > /etc/resolv.conf && exec sleep infinity"
