@@ -177,6 +177,12 @@ main() {
   append_aliases
   copy_netrc
   log "Done. Open a new shell session to use the aliases."
+  
+  # Execute the command passed as arguments (from CMD in Dockerfile)
+  if [ $# -gt 0 ]; then
+    log "Executing: $*"
+    exec "$@"
+  fi
 }
 
 main "$@"

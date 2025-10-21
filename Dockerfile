@@ -110,5 +110,8 @@ RUN ARCH=$(uname -m) && \
 #     && rm -rf /var/lib/apt/lists/*
 
 # Add start script into the image
+COPY start.sh /usr/local/bin/container-start.sh
+RUN chmod +x /usr/local/bin/container-start.sh
+
 ENTRYPOINT ["/usr/local/bin/container-start.sh"]
 CMD ["sleep", "infinity"]
