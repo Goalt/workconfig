@@ -4,6 +4,7 @@
 # - Start D-Bus if available
 # - Set DNS resolver to Google DNS (8.8.8.8)
 # - Append OpenVPN3 helper aliases to the user's ~/.bashrc
+# - Copy /data/app/.netrc into user home(s)
 
 set -euo pipefail
 
@@ -130,10 +131,51 @@ append_aliases() {
   done
 }
 
+copy_netrc() {
+  local src="/data/app/.netrc"
+  if [ ! -f "$src" ]; then
+    warn "No $src found; skipping .netrc copy"
+    return 0
+  fi
+
+  local target_users=()
+  if [ -n "${SUDO_USER:-}" ] && id -u "$SUDO_USER" >/dev/null 2>&1; then
+    target_users+=("$SUDO_USER")
+  else
+    target_users+=("${USER:-root}")
+  fi
+  if id -u ubuntu >/dev/null 2>&1; then
+    local found=false
+    for u in "${target_users[@]}"; do
+      if [ "$u" = "ubuntu" ]; then found=true; break; fi
+    done
+    if [ "$found" = false ]; then target_users+=("ubuntu"); fi
+  fi
+
+  for u in "${target_users[@]}"; do
+    local home_dir
+    home_dir=$(getent passwd "$u" | cut -d: -f6)
+    [ -n "$home_dir" ] || continue
+    local dst="$home_dir/.netrc"
+
+    # Attempt copy; warn if not writable
+    if cp -f "$src" "$dst" 2>/dev/null; then
+      chmod 600 "$dst" 2>/dev/null || warn "Could not chmod 600 $dst"
+      if is_root; then
+        chown "$u":"$u" "$dst" 2>/dev/null || warn "Could not chown $dst to $u"
+      fi
+      log "Installed .netrc for user $u at $dst"
+    else
+      warn "Could not write $dst (insufficient permissions?). Try running as root or copy manually."
+    fi
+  done
+}
+
 main() {
   start_dbus
   set_dns
   append_aliases
+  copy_netrc
   log "Done. Open a new shell session to use the aliases."
 }
 
