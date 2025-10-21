@@ -114,3 +114,5 @@ RUN ARCH=$(uname -m) && \
 
 # Default command - apply custom resolv.conf and then sleep
 RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+CMD ["sleep", "infinity"]
