@@ -111,8 +111,6 @@ RUN ARCH=$(uname -m) && \
 
 # Run after login
 # RUN /etc/init.d/dbus start
-
-# Default command - apply custom resolv.conf and then sleep
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+# RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
 CMD ["sleep", "infinity"]
