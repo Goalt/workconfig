@@ -109,8 +109,6 @@ RUN ARCH=$(uname -m) && \
 #     && apt-get clean \
 #     && rm -rf /var/lib/apt/lists/*
 
-# Run after login
-# RUN /etc/init.d/dbus start
-# RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
-
+# Add start script into the image
+ENTRYPOINT ["/usr/local/bin/container-start.sh"]
 CMD ["sleep", "infinity"]
