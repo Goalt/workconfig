@@ -4,12 +4,6 @@ FROM debian:bookworm
 # Set environment variables to prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Copy custom DNS resolver configuration
-COPY resolv.conf /etc/resolv.conf.custom
-
-# Configure DNS resolver during build
-RUN cat /etc/resolv.conf.custom
-
 # Update package list and install basic utilities
 RUN apt-get update && \
     apt-get install -y \
