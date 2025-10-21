@@ -109,8 +109,6 @@ RUN ARCH=$(uname -m) && \
 #     && apt-get clean \
 #     && rm -rf /var/lib/apt/lists/*
 
-# Run after login
-# RUN /etc/init.d/dbus start
-
-# Default command
+# Add start script into the image
+ENTRYPOINT ["/usr/local/bin/container-start.sh"]
 CMD ["sleep", "infinity"]
