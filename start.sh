@@ -5,6 +5,7 @@
 # - Set DNS resolver to Google DNS (8.8.8.8)
 # - Append OpenVPN3 helper aliases to the user's ~/.bashrc
 # - Copy /data/app/.netrc into user home(s)
+# - Configure git global user email and name
 
 set -euo pipefail
 
@@ -171,11 +172,45 @@ copy_netrc() {
   done
 }
 
+configure_git() {
+  local target_users=()
+  if [ -n "${SUDO_USER:-}" ] && id -u "$SUDO_USER" >/dev/null 2>&1; then
+    target_users+=("$SUDO_USER")
+  else
+    target_users+=("${USER:-root}")
+  fi
+  if id -u ubuntu >/dev/null 2>&1; then
+    local found=false
+    for u in "${target_users[@]}"; do
+      if [ "$u" = "ubuntu" ]; then found=true; break; fi
+    done
+    if [ "$found" = false ]; then target_users+=("ubuntu"); fi
+  fi
+
+  for u in "${target_users[@]}"; do
+    local home_dir
+    home_dir=$(getent passwd "$u" | cut -d: -f6)
+    [ -n "$home_dir" ] || continue
+
+    # Run git config as the target user
+    if is_root && [ "$u" != "root" ]; then
+      su - "$u" -c 'git config --global user.email "yury.konkov@armenotech.com"' 2>/dev/null || warn "Could not set git email for user $u"
+      su - "$u" -c 'git config --global user.name "Yury Konkov"' 2>/dev/null || warn "Could not set git name for user $u"
+      log "Configured git user for $u"
+    else
+      git config --global user.email "yury.konkov@armenotech.com" 2>/dev/null || warn "Could not set git email"
+      git config --global user.name "Yury Konkov" 2>/dev/null || warn "Could not set git name"
+      log "Configured git user"
+    fi
+  done
+}
+
 main() {
   start_dbus
   set_dns
   append_aliases
   copy_netrc
+  configure_git
   log "Done. Open a new shell session to use the aliases."
   
   # Execute the command passed as arguments (from CMD in Dockerfile)
