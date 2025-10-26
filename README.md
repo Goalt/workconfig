@@ -28,6 +28,7 @@ This project provides a containerized development environment built on Debian Bo
 - **System Utilities**
   - vim text editor
   - htop process monitor
+  - jq JSON processor
   - Standard Unix utilities
 
 ### Architecture Support
