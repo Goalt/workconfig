@@ -15,6 +15,7 @@ RUN apt-get update && \
     net-tools \
     ca-certificates \
     unzip \
+    postgresql-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
