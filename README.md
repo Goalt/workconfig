@@ -25,6 +25,19 @@ This project provides a containerized development environment built on Debian Bo
   - go-swagger (v0.31.0) for API development
   - Visual Studio Code CLI for remote development
   - PostgreSQL client (psql) for database management
+  - VS Code Extensions (automatically installed):
+    - GitLens (eamodio.gitlens)
+    - GitHub Copilot (GitHub.copilot)
+    - GitHub Copilot Workspace (github.copilot-workspace)
+    - SQLTools (mtxr.sqltools)
+    - SQLTools MySQL Driver (mtxr.sqltools-driver-mysql)
+    - SQLTools PostgreSQL Driver (mtxr.sqltools-driver-pg)
+    - PlantUML (well-ar.plantuml)
+    - Kubernetes Tools (ms-kubernetes-tools.vscode-kubernetes-tools)
+    - UUID Generator (netcorext.uuid-generator)
+    - REST Client (humao.rest-client)
+    - Tooltitude (tooltitudeteam.tooltitude)
+    - Go Outliner (766b.go-outliner)
 
 - **System Utilities**
   - vim text editor
@@ -82,6 +95,7 @@ The container uses a custom startup script (`start.sh`) that performs the follow
    - `vpn-start` - Start VPN connection using `/data/app/client.ovpn`
    - `vpn-disconnect` - Disconnect active VPN session
 4. **Credential Management** - Copies `.netrc` from `/data/app/.netrc` to user home directories if available
+5. **VS Code Extensions** - Automatically installs a curated set of VS Code extensions for development
 
 ## OpenVPN3 Usage
 
