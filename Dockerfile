@@ -16,6 +16,7 @@ RUN apt-get update && \
     ca-certificates \
     unzip \
     jq \
+    postgresql-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
