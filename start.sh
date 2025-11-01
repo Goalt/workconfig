@@ -251,7 +251,7 @@ install_vscode_extensions() {
     for ext in "${extensions[@]}"; do
       # Run code as the target user
       if is_root && [ "$u" != "root" ]; then
-        if su - "$u" -c "code --install-extension $ext --force" 2>/dev/null; then
+        if su - "$u" -c "code --install-extension '$ext' --force" 2>/dev/null; then
           log "Installed extension $ext for user $u"
         else
           warn "Failed to install extension $ext for user $u"
