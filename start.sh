@@ -6,6 +6,7 @@
 # - Append OpenVPN3 helper aliases to the user's ~/.bashrc
 # - Copy /data/app/.netrc into user home(s)
 # - Configure git global user email and name
+# - Install VS Code extensions
 
 set -euo pipefail
 
@@ -205,12 +206,74 @@ configure_git() {
   done
 }
 
+install_vscode_extensions() {
+  # Check if code CLI is available
+  if ! command -v code >/dev/null 2>&1; then
+    warn "code CLI not found; skipping VS Code extension installation"
+    return 0
+  fi
+
+  local extensions=(
+    "eamodio.gitlens"
+    "GitHub.copilot"
+    "mtxr.sqltools"
+    "well-ar.plantuml"
+    "mtxr.sqltools-driver-mysql"
+    "mtxr.sqltools-driver-pg"
+    "ms-kubernetes-tools.vscode-kubernetes-tools"
+    "netcorext.uuid-generator"
+    "humao.rest-client"
+    "tooltitudeteam.tooltitude"
+    "766b.go-outliner"
+    "github.copilot-workspace"
+  )
+
+  local target_users=()
+  if [ -n "${SUDO_USER:-}" ] && id -u "$SUDO_USER" >/dev/null 2>&1; then
+    target_users+=("$SUDO_USER")
+  else
+    target_users+=("${USER:-root}")
+  fi
+  if id -u ubuntu >/dev/null 2>&1; then
+    local found=false
+    for u in "${target_users[@]}"; do
+      if [ "$u" = "ubuntu" ]; then found=true; break; fi
+    done
+    if [ "$found" = false ]; then target_users+=("ubuntu"); fi
+  fi
+
+  for u in "${target_users[@]}"; do
+    local home_dir
+    home_dir=$(getent passwd "$u" | cut -d: -f6)
+    [ -n "$home_dir" ] || continue
+
+    log "Installing VS Code extensions for user $u..."
+    for ext in "${extensions[@]}"; do
+      # Run code as the target user
+      if is_root && [ "$u" != "root" ]; then
+        if su - "$u" -c "code --install-extension $ext --force" 2>/dev/null; then
+          log "Installed extension $ext for user $u"
+        else
+          warn "Failed to install extension $ext for user $u"
+        fi
+      else
+        if code --install-extension "$ext" --force 2>/dev/null; then
+          log "Installed extension $ext"
+        else
+          warn "Failed to install extension $ext"
+        fi
+      fi
+    done
+  done
+}
+
 main() {
   start_dbus
   set_dns
   append_aliases
   copy_netrc
   configure_git
+  install_vscode_extensions
   log "Done. Open a new shell session to use the aliases."
   
   # Execute the command passed as arguments (from CMD in Dockerfile)
