@@ -43,6 +43,7 @@ This project provides a containerized development environment built on Debian Bo
   - vim text editor
   - htop process monitor
   - jq JSON processor
+  - OpenSSH Server for remote access
   - Standard Unix utilities
 
 ### Architecture Support
@@ -69,33 +70,53 @@ Basic usage with infinite sleep (keeps container running):
 docker run -d --name workenv workconfig
 ```
 
+With SSH port exposed:
+
+```bash
+docker run -d -p 2222:22 --name workenv workconfig
+```
+
 With volume mounts for persistent data:
 
 ```bash
 docker run -d \
   --name workenv \
+  -p 2222:22 \
   -v /path/to/data:/data/app \
   workconfig
 ```
 
 ### Accessing the Container
 
+Via Docker exec:
+
 ```bash
 docker exec -it workenv bash
+```
+
+Via SSH (if port is exposed):
+
+```bash
+# First, set a password for the ubuntu user
+docker exec -it workenv passwd ubuntu
+
+# Then connect via SSH
+ssh -p 2222 ubuntu@localhost
 ```
 
 ## Container Startup
 
 The container uses a custom startup script (`start.sh`) that performs the following initialization tasks:
 
-1. **D-Bus Setup** - Starts the D-Bus daemon if available (required for OpenVPN3)
-2. **DNS Configuration** - Sets up DNS resolver to use Google DNS (8.8.8.8)
-3. **VPN Aliases** - Adds convenient OpenVPN3 aliases to user's `.bashrc`:
+1. **SSH Server** - Starts the OpenSSH server for remote access
+2. **D-Bus Setup** - Starts the D-Bus daemon if available (required for OpenVPN3)
+3. **DNS Configuration** - Sets up DNS resolver to use Google DNS (8.8.8.8)
+4. **VPN Aliases** - Adds convenient OpenVPN3 aliases to user's `.bashrc`:
    - `vpn-sessions` - List active VPN sessions
    - `vpn-start` - Start VPN connection using `/data/app/client.ovpn`
    - `vpn-disconnect` - Disconnect active VPN session
-4. **Credential Management** - Copies `.netrc` from `/data/app/.netrc` to user home directories if available
-5. **VS Code Extensions** - Automatically installs a curated set of VS Code extensions for development
+5. **Credential Management** - Copies `.netrc` from `/data/app/.netrc` to user home directories if available
+6. **VS Code Extensions** - Automatically installs a curated set of VS Code extensions for development
 
 ## OpenVPN3 Usage
 
@@ -121,6 +142,22 @@ The container expects the following volume mount for full functionality:
 - `/data/app` - Directory for configuration files:
   - `client.ovpn` - OpenVPN configuration file
   - `.netrc` - Authentication credentials (optional)
+
+## SSH Access
+
+The container includes an OpenSSH server that starts automatically. To use SSH access:
+
+1. Expose port 22 when running the container (e.g., `-p 2222:22`)
+2. Set a password for the user you want to connect as:
+   ```bash
+   docker exec -it workenv passwd ubuntu
+   ```
+3. Connect via SSH:
+   ```bash
+   ssh -p 2222 ubuntu@localhost
+   ```
+
+**Security Note:** By default, the SSH server is configured to allow password authentication for convenience in development environments. For production use, consider using SSH keys instead.
 
 ## User Configuration
 
