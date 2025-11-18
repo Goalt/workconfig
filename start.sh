@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Post-login setup script
+# - Start SSH server
 # - Start D-Bus if available
 # - Set DNS resolver to Google DNS (8.8.8.8)
 # - Append OpenVPN3 helper aliases to the user's ~/.bashrc
@@ -22,7 +23,33 @@ is_root() {
   [ "${EUID:-$(id -u)}" -eq 0 ]
 }
 
-# 1) Start dbus if possible
+# 1) Start SSH server
+start_ssh() {
+  if command -v sshd >/dev/null 2>&1; then
+    if is_root; then
+      # Create privilege separation directory if it doesn't exist
+      mkdir -p /run/sshd
+      
+      # Check if SSH server is already running
+      if pgrep -x sshd >/dev/null 2>&1; then
+        log "SSH server is already running"
+      else
+        # Start SSH server
+        if /usr/sbin/sshd; then
+          log "SSH server started successfully"
+        else
+          warn "Failed to start SSH server; continuing"
+        fi
+      fi
+    else
+      warn "Not root; cannot start SSH server"
+    fi
+  else
+    warn "SSH server not installed; skipping"
+  fi
+}
+
+# 2) Start dbus if possible
 start_dbus() {
   if command -v service >/dev/null 2>&1 && service --status-all >/dev/null 2>&1; then
     if service dbus status >/dev/null 2>&1; then
@@ -70,7 +97,7 @@ start_dbus() {
   fi
 }
 
-# 2) Configure DNS resolver
+# 3) Configure DNS resolver
 set_dns() {
   local resolv="/etc/resolv.conf"
   if is_root; then
@@ -86,7 +113,7 @@ set_dns() {
   fi
 }
 
-# 3) Append aliases to bashrc for relevant users
+# 4) Append aliases to bashrc for relevant users
 append_aliases() {
   local target_users=()
   # Prefer invoking user if SUDO_USER set, otherwise current user
@@ -268,6 +295,7 @@ install_vscode_extensions() {
 }
 
 main() {
+  start_ssh
   start_dbus
   set_dns
   append_aliases
