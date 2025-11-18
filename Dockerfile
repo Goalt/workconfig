@@ -95,6 +95,20 @@ RUN ARCH=$(uname -m) && \
     rm vscode_cli.tar.gz && \
     chmod +x /usr/local/bin/code
 
+# Install ngrok
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        NGROK_ARCH="amd64"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        NGROK_ARCH="arm64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    curl -sSL "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-${NGROK_ARCH}.tgz" -o ngrok.tgz && \
+    tar -xf ngrok.tgz -C /usr/local/bin && \
+    rm ngrok.tgz && \
+    chmod +x /usr/local/bin/ngrok
+
 # Install Docker (Todo)
 # RUN apt-get update && \
 #     apt-get install -y \

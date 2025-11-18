@@ -25,6 +25,7 @@ This project provides a containerized development environment built on Debian Bo
   - go-swagger (v0.31.0) for API development
   - Visual Studio Code CLI for remote development
   - PostgreSQL client (psql) for database management
+  - ngrok for secure tunneling to localhost
   - VS Code Extensions (automatically installed):
     - GitLens (eamodio.gitlens)
     - GitHub Copilot (GitHub.copilot)
