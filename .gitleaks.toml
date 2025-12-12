@@ -1,0 +1,37 @@
+# Gitleaks configuration for work-config repository
+# Reference: https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks Configuration for work-config"
+
+[extend]
+# useDefault will extend the base configuration with the default gitleaks config:
+# https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+useDefault = true
+
+[allowlist]
+description = "Allowlist for work-config repository"
+
+# Allow example/placeholder credentials in README
+regexes = [
+  '''example\.com''',
+  '''your-.*-here''',
+  '''replace-with-your''',
+]
+
+paths = [
+  '''\.github/workflows/.*\.yml$''',  # GitHub Actions use secrets references
+  '''README\.md$''',                   # Documentation may contain example credentials
+]
+
+# Ignore git configuration in start.sh as these are example values
+[allowlist.commits]
+description = "Commits to ignore"
+# Add specific commit SHAs here if needed
+commits = []
+
+[allowlist.stopwords]
+description = "Stopwords to ignore"
+stopwords = [
+  '''yury.konkov@armenotech.com''',  # Git config email in start.sh
+  '''Yury Konkov''',                  # Git config name in start.sh
+]

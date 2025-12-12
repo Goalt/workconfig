@@ -1,0 +1,123 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Basic Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t workconfig:test .
+
+      - name: Test container startup
+        run: |
+          echo "Starting container..."
+          docker run -d --name test-container workconfig:test
+          
+          echo "Waiting for container to be ready..."
+          sleep 10
+          
+          echo "Checking if container is running..."
+          docker ps | grep test-container
+
+      - name: Test AWS CLI installation
+        run: |
+          echo "Testing AWS CLI..."
+          docker exec test-container aws --version
+
+      - name: Test Go installation
+        run: |
+          echo "Testing Go..."
+          docker exec test-container go version
+
+      - name: Test OpenVPN3 installation
+        run: |
+          echo "Testing OpenVPN3..."
+          docker exec test-container openvpn3 version || echo "OpenVPN3 version command not available, checking if binary exists..."
+          docker exec test-container which openvpn3
+
+      - name: Test VS Code CLI installation
+        run: |
+          echo "Testing VS Code CLI..."
+          docker exec test-container code --version
+
+      - name: Test git installation and configuration
+        run: |
+          echo "Testing git..."
+          docker exec test-container git --version
+          docker exec test-container bash -c "su - ubuntu -c 'git config --get user.email'"
+          docker exec test-container bash -c "su - ubuntu -c 'git config --get user.name'"
+
+      - name: Test VPN aliases
+        run: |
+          echo "Testing VPN aliases..."
+          docker exec test-container bash -c "su - ubuntu -c 'source ~/.bashrc && alias | grep vpn'"
+
+      - name: Test swagger installation
+        run: |
+          echo "Testing swagger..."
+          docker exec test-container swagger version
+
+      - name: Test PostgreSQL client
+        run: |
+          echo "Testing psql..."
+          docker exec test-container psql --version
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop test-container || true
+          docker rm test-container || true
+
+  smoke-test:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: build-and-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t workconfig:smoke .
+
+      - name: Run smoke tests
+        run: |
+          docker run --rm workconfig:smoke bash -c '
+            set -e
+            echo "=== Running smoke tests ==="
+            
+            echo "✓ Checking basic utilities..."
+            which curl wget git vim htop jq
+            
+            echo "✓ Checking AWS tools..."
+            aws --version
+            session-manager-plugin --version
+            
+            echo "✓ Checking development tools..."
+            go version
+            swagger version
+            code --version
+            
+            echo "✓ Checking database tools..."
+            psql --version
+            
+            echo "✓ All smoke tests passed!"
+          '

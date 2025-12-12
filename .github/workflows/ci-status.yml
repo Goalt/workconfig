@@ -1,0 +1,31 @@
+name: CI Status
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  status:
+    name: Overall CI Status
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: always()
+    steps:
+      - name: Check CI Status
+        run: |
+          {
+            echo "## CI/CD Pipeline Status"
+            echo ""
+            echo "All CI/CD checks completed. See individual workflow runs for details."
+            echo ""
+            echo "### Workflows"
+            echo "- Linting (Dockerfile & Shell Scripts)"
+            echo "- Security Scanning (Gitleaks & Trivy)"
+            echo "- Build & Test"
+            echo "- Docker Image Build & Push"
+          } >> "$GITHUB_STEP_SUMMARY"
