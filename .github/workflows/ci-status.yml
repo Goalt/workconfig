@@ -12,6 +12,8 @@ jobs:
   status:
     name: Overall CI Status
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: always()
     steps:
       - name: Check CI Status
