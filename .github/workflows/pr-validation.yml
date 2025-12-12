@@ -1,0 +1,121 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+          requireScope: false
+
+  build-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for ${{ matrix.platform }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: false
+          load: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: workconfig:test
+
+  size-check:
+    name: Image Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t workconfig:check .
+
+      - name: Check image size
+        run: |
+          IMAGE_SIZE=$(docker image inspect workconfig:check --format='{{.Size}}')
+          IMAGE_SIZE_MB=$((IMAGE_SIZE / 1024 / 1024))
+          echo "Image size: ${IMAGE_SIZE_MB}MB"
+          echo "IMAGE_SIZE_MB=${IMAGE_SIZE_MB}" >> $GITHUB_ENV
+          
+          # Set a reasonable threshold (e.g., 2GB)
+          MAX_SIZE_MB=2048
+          if [ $IMAGE_SIZE_MB -gt $MAX_SIZE_MB ]; then
+            echo "::error::Image size ${IMAGE_SIZE_MB}MB exceeds maximum ${MAX_SIZE_MB}MB"
+            exit 1
+          fi
+
+      - name: Comment image size on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const imageSize = process.env.IMAGE_SIZE_MB;
+            const body = `## 📦 Docker Image Size\n\nThe built image size is **${imageSize}MB**`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Docker Image Size')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

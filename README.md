@@ -1,5 +1,10 @@
 # workconfig
 
+[![Build and Push Docker Image](https://github.com/Goalt/work-config/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/Goalt/work-config/actions/workflows/docker-build-push.yml)
+[![Lint](https://github.com/Goalt/work-config/actions/workflows/lint.yml/badge.svg)](https://github.com/Goalt/work-config/actions/workflows/lint.yml)
+[![Security Scan](https://github.com/Goalt/work-config/actions/workflows/security.yml/badge.svg)](https://github.com/Goalt/work-config/actions/workflows/security.yml)
+[![Test](https://github.com/Goalt/work-config/actions/workflows/test.yml/badge.svg)](https://github.com/Goalt/work-config/actions/workflows/test.yml)
+
 A Debian-based Docker development environment pre-configured with essential tools for cloud development, VPN connectivity, and software development workflows.
 
 ## Overview
@@ -142,6 +147,54 @@ The Dockerfile includes commented-out Docker installation steps, indicating pote
 ## License
 
 This project is provided as-is without a specific license. Please refer to the repository for any licensing information.
+
+## CI/CD Pipeline
+
+This repository uses GitHub Actions for continuous integration and deployment. The following workflows are configured:
+
+### Automated Workflows
+
+- **Build and Push Docker Image** - Builds multi-architecture Docker images and pushes them to GitHub Container Registry
+  - Triggers: Push to main, tags, PRs, manual dispatch
+  - Platforms: linux/amd64, linux/arm64
+  - Registry: ghcr.io
+
+- **Lint** - Validates code quality
+  - Dockerfile linting with hadolint
+  - Shell script validation with ShellCheck
+  - SARIF reports uploaded to GitHub Security tab
+
+- **Security Scan** - Continuous security monitoring
+  - Secret scanning with Gitleaks
+  - Container vulnerability scanning with Trivy
+  - Daily scheduled scans at 2 AM UTC
+  - SARIF reports uploaded to GitHub Security tab
+
+- **Test** - Automated testing
+  - Docker image build validation
+  - Container startup and functionality tests
+  - Tool installation verification (AWS CLI, Go, OpenVPN3, VS Code CLI, etc.)
+  - Smoke tests for critical functionality
+
+- **PR Validation** - Quality gates for pull requests
+  - Semantic PR title validation
+  - Multi-platform build verification
+  - Docker image size checks
+  - Automated size reporting in PR comments
+
+### Dependency Management
+
+Dependabot is configured to automatically update:
+- GitHub Actions workflows (weekly on Mondays)
+- Docker base images (weekly on Mondays)
+
+### Best Practices
+
+The CI/CD pipeline follows best practices from the gitleaks/gitleaks project:
+- No color codes in CI output for better log readability
+- Multiple report formats (SARIF, table) for different use cases
+- Directory-aware reporting with proper file mapping
+- Support for both local and CI/CD environments
 
 ## Contributing
 
