@@ -76,11 +76,11 @@ jobs:
           IMAGE_SIZE=$(docker image inspect workconfig:check --format='{{.Size}}')
           IMAGE_SIZE_MB=$((IMAGE_SIZE / 1024 / 1024))
           echo "Image size: ${IMAGE_SIZE_MB}MB"
-          echo "IMAGE_SIZE_MB=${IMAGE_SIZE_MB}" >> $GITHUB_ENV
+          echo "IMAGE_SIZE_MB=${IMAGE_SIZE_MB}" >> "$GITHUB_ENV"
           
           # Set a reasonable threshold (e.g., 2GB)
           MAX_SIZE_MB=2048
-          if [ $IMAGE_SIZE_MB -gt $MAX_SIZE_MB ]; then
+          if [ "$IMAGE_SIZE_MB" -gt "$MAX_SIZE_MB" ]; then
             echo "::error::Image size ${IMAGE_SIZE_MB}MB exceeds maximum ${MAX_SIZE_MB}MB"
             exit 1
           fi

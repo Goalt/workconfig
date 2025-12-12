@@ -75,17 +75,19 @@ jobs:
       - name: Generate build report
         if: github.event_name != 'pull_request'
         run: |
-          echo "## Docker Build Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
-          echo "- **Digest**: \`${{ steps.build-push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Tags" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Docker Build Report"
+            echo ""
+            echo "### Build Information"
+            echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`"
+            echo "- **Platforms**: linux/amd64, linux/arm64"
+            echo "- **Digest**: \`${{ steps.build-push.outputs.digest }}\`"
+            echo ""
+            echo "### Tags"
+            echo "\`\`\`"
+            echo "${{ steps.meta.outputs.tags }}"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Scan image with Trivy
         if: github.event_name != 'pull_request'
